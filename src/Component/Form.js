@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const MyForm = () => {
+const Form = () => {
     const [textInput, setTextInput] = useState('');
 
     const handleTextChange = (event) => {
@@ -48,4 +48,4 @@ const MyForm = () => {
     );
 }
 
-export default MyForm;
+export default Form;
