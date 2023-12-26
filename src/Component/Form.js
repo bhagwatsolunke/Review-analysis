@@ -1,51 +1,99 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 
 const Form = () => {
     const [textInput, setTextInput] = useState('');
+    const [results, setResults] = useState([]);
 
     const handleTextChange = (event) => {
         setTextInput(event.target.value);
     };
 
-    const handleSubmit = (event) => {
+    const handleSubmit = async (event) => {
         event.preventDefault();
 
         // Perform any validation if needed
 
         // Send data to the backend
-        sendDataToBackend(textInput);
+        await sendDataToBackend(textInput);
     };
 
-    const sendDataToBackend = (textData) => {
-        // Perform the POST request to your backend
-        fetch('your-backend-api-endpoint', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ textData }),
-        })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Response from backend:', data);
-                // Handle the response as needed
-            })
-            .catch(error => {
-                console.error('Error sending data to backend:', error);
-                // Handle errors
+    const sendDataToBackend = async (textData) => {
+        try {
+            const response = await axios.post('http://localhost:5000/predict', {
+                text: textData,
             });
+
+            setResults(response.data);
+            console.log(results, 'success');
+        } catch (error) {
+            console.error('Error sending data to backend:', error);
+            // Handle errors
+        }
+    };
+
+    const getOverallSentiment = () => {
+        if(results && results.length > 0) {
+            const negativescore = results[0].score; 
+            const positivescore = results[2].score; 
+            const Neutralscore= results[1].score;
+            if (negativescore>Neutralscore && negativescore>positivescore) {
+                return 'Negative';
+            } else if (positivescore>Neutralscore && positivescore>negativescore) {
+                return 'Positive';
+            } else {
+                return 'Neutral';
+            }
+        }
+
+        return 'No Results';
     };
 
     return (
         <div>
             <form onSubmit={handleSubmit}>
-                <div class="mb-3" style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
-                    <input type="text" class="form-control" id="exampleInputPassword1" value={textInput}  onChange={handleTextChange} style={{ width: '100%', height: '100px', padding: '10px', margin: '5px' }}></input>
+                <div className="mb-3" style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
+                    <input
+                        type="text"
+                        className="form-control"
+                        id="exampleInputPassword1"
+                        value={textInput}
+                        onChange={handleTextChange}
+                        style={{ width: '100%', height: '100px', padding: '10px', margin: '5px' }}
+                    ></input>
                 </div>
-                <button type="submit" class="btn btn-primary">Submit</button>
+                <button type="submit" className="btn btn-primary" style={{ justifyContent: 'center', marginLeft: '20px' }} >
+                    Submit
+                </button>
             </form>
+
+            <div  style={{ justifyContent: 'center', marginLeft: '20px' }}> 
+                <h2>Results:</h2>
+                {results && results.length >= 3 && (
+                    <>
+                        <ul>
+                            <li style={{ color: 'green' }}>
+                                <strong>Label: Positive</strong>, <strong>Score:</strong> {results[2].score}
+                            </li>
+                            <li style={{ color: 'gray' }}>
+                                <strong>Label: Neutral</strong>, <strong>Score:</strong> {results[1].score}
+                            </li>
+                            <li style={{ color: 'red' }}>
+                                <strong>Label: Negative</strong>, <strong>Score:</strong> {results[0].score}
+                            </li>
+                        </ul>
+
+                    </>
+                )}
+                 </div>
+                <div style={{ justifyContent: 'center', marginLeft: '20px' }} >
+                <h2>Overall Sentiment:</h2>
+                <h4>{getOverallSentiment()}</h4>
+                </div>
+                
+           
         </div>
     );
-}
+};
 
-export default Form;
+export default Form; 
